@@ -1,11 +1,13 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Column, Table } from 'react-virtualized';
 import Immutable from 'immutable';
 import SortDirection from '../src/components/SortDirection';
 import { mock } from '../mock';
 import assetsActions from '../src/actions/assetsActions';
+import FavoritesTable from '../src/components/FavoritesTable';
+import Filter from '../src/components/Filter';
+import { filterAssets } from '../src/selectors/assetsSelector';
 
 class App extends React.PureComponent {
   constructor(props) {
@@ -28,7 +30,7 @@ class App extends React.PureComponent {
   }
 
   _getAssets() {
-    const { assets } = this.props.assetsData;
+    const { assets } = this.props;
     const listArr = [];
 
     Object.keys(assets).map(item => (
@@ -56,28 +58,33 @@ class App extends React.PureComponent {
     this.props.addToFavorites(e.rowData);
   }
 
+  _removeFromFavorites(e) {
+    this.props.removeFromFavorites(e.rowData);
+  }
+
+
   render() {
     const { sortBy, sortDirection } = this.state;
     const sortedList = this._sortList({sortBy, sortDirection});
     const rowGetter = ({index}) => this._getDatum(sortedList, index);
     const list = this._getAssets();
-    const { favorites } = this.props.favoritesData;
 
     return (
       <div>
-        {Object.keys(favorites).map(item => (
-          <div key={favorites[item].id}>
-            <div>{favorites[item].assetName}</div>
-            <div>{favorites[item].price}</div>
-            <div>{favorites[item].type}</div>
-          </div>
-        ))}
+        <FavoritesTable
+          favoritesData={this.props.favoritesData}
+          addToFavorites={this.props.addToFavorites}
+          removeFromFavorites={e => this._removeFromFavorites(e)}
+        />
+        <Filter
+          onChange={this.props.applyFilter}
+          type={this.props.filter}
+        />
+        <h2>Assets Table</h2>
         <Table
           width={600}
           height={600}
           headerHeight={20}
-          onRowClick={e => this._onRowClick(e)}
-          overscanRowCount={10}
           rowHeight={50}
           rowCount={list.length}
           rowGetter={rowGetter}
@@ -85,6 +92,11 @@ class App extends React.PureComponent {
           sortBy={sortBy}
           sortDirection={sortDirection}
         >
+          <Column
+            label='Id'
+            dataKey='id'
+            width={200}
+          />
           <Column
             label='Name'
             dataKey='assetName'
@@ -100,6 +112,13 @@ class App extends React.PureComponent {
             label='Type'
             dataKey='type'
           />
+          <Column
+            disableSort
+            width={200}
+            label=''
+            dataKey='add'
+            cellRenderer={(e) => (<div onClick={() => this._onRowClick(e)}>Add to favorites</div>)}
+          />
         </Table>
       </div>
     );
@@ -108,12 +127,16 @@ class App extends React.PureComponent {
 
 const mapStateToProps = state => ({
   assetsData: state,
+  assets: filterAssets(state),
   favoritesData: state,
+  filter: state.assets.collectionFilter,
 });
 
 const mapDispatchToProps = dispatch => ({
   fetchAssets: val => dispatch(assetsActions.getAssets(val)),
-  addToFavorites: val => dispatch(assetsActions.addToFavorites(val))
+  addToFavorites: val => dispatch(assetsActions.addToFavorites(val)),
+  removeFromFavorites: val => dispatch(assetsActions.removeFromFavorites(val)),
+  applyFilter: val => dispatch(assetsActions.applyFilter(val)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

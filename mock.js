@@ -20,7 +20,7 @@ const getAllAssets = (n) => {
   return result;
 }
 
-const assets = getAllAssets(4);
+const assets = getAllAssets(200);
 
 const timeObservable = Rx.Observable.interval(1000);
 export const mock = Observable.create((ob) => {

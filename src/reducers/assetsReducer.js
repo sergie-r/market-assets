@@ -1,8 +1,8 @@
 import assetsActions from '../actions/assetsActions';
-
 const initial = {
   assets: {},
   favorites: {},
+  collectionFilter: 'All'
 };
 
 const assetsReducer = (state = initial, action) => {
@@ -15,9 +15,29 @@ const assetsReducer = (state = initial, action) => {
 
     case assetsActions.ADD_TO_FAVORITES:
       const favoritesObj = Object.assign({}, state.favorites);
+      const assetsCopy = Object.assign({}, state.assets);
+      delete assetsCopy[Object.keys(action.favorites)];
+
       return Object.assign({}, state, {
         favorites: Object.assign(favoritesObj, action.favorites),
+        assets: assetsCopy,
       });
+
+    case assetsActions.REMOVE_FROM_FAVORITES:
+      const assetsAnotherCopy = Object.assign({}, state.assets);
+      const favoritesCopy = Object.assign({}, state.favorites);
+      delete favoritesCopy[Object.keys(action.favorites)];
+
+      return Object.assign({}, state, {
+        assets: Object.assign(assetsAnotherCopy, action.favorites),
+        favorites: favoritesCopy,
+      });
+
+    case assetsActions.APPLY_FILTER:
+      return Object.assign({}, state, {
+        collectionFilter: action.filterType,
+      });
+
     default:
       return state;
   }
