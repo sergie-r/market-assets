@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Column, Table } from 'react-virtualized';
 import Immutable from 'immutable';
@@ -20,7 +21,11 @@ class App extends React.PureComponent {
   };
 
   componentDidMount() {
-    mock.subscribe(val => this.props.fetchAssets(val));
+    mock.subscribe((val) => {
+      ReactDOM.unstable_deferredUpdates(() => {
+        this.props.fetchAssets(val)
+      });
+    });
   }
 
   _sort({sortBy, sortDirection}) {
